@@ -1,0 +1,23 @@
+npm install bcrypt cloudinary cookie-parser cors dotenv express express-fileupload express-rate-limit jsonwebtoken mongoose multer nodemailer
+
+bcrypt → password hashing
+
+cloudinary → image upload / storage
+
+cookie-parser → cookies read करायला
+
+cors → frontend-backend connection allow
+
+dotenv → .env file variables
+
+express → Node.js backend framework
+
+express-fileupload / multer → file upload
+
+express-rate-limit → API rate limit security
+
+jsonwebtoken → JWT authentication
+
+mongoose → MongoDB connection
+
+nodemailer → email sending

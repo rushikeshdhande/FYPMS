@@ -1,0 +1,673 @@
+
+<!--
+// Multer Extension and types
+// Svg Icon from Upload files
+
+
+<svg className={className} fill="currentColor" viewBox="0 0 24 24">
+        <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z" />
+    </svg>
+
+
+const allowedTypes = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-powerpoint",
+    "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+    "application/zip",
+    "application/x-zip-compressed",
+    "application/x-rar-compressed",
+    "application/x-rar",
+    "application/vnd.rar",
+    "application/octet-stream",
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "text/plain",
+    "application/javascript",
+    "text/css",
+    "text/html",
+    "application/json",
+  ];
+
+  const allowedExtensions = [
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".ppt",
+    ".pptx",
+    ".zip",
+    ".rar",
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".txt",
+    ".js",
+    ".css",
+    ".html",
+    ".json",
+  ];
+
+const color =
+      extension === "pdf"
+        ? "text-red-500"
+        : ["doc", "docx"].includes(extension)
+        ? "text-blue-500"
+        : ["ppt", "pptx"].includes(extension)
+        ? "text-orange-500"
+        : "text-slate-500";
+
+
+
+
+const getNotificationIcon = (type) => {
+    switch (type) {
+      case "feedback":
+        return <MessageCircle className="w-6 h-6 text-blue-500" />;
+
+      case "deadline":
+        return <Clock5 className="w-6 h-6 text-red-500" />;
+
+      case "approval":
+        return <BadgeCheck className="w-6 h-6 text-green-500" />;
+
+      case "meeting":
+        return <Calendar className="w-6 h-6 text-purple-500" />;
+
+      case "system":
+        return <Settings className="w-6 h-6 text-gray-500" />;
+
+      default:
+        // Custom combined icon (User + Down Arrow)
+        return (
+          <div
+            className="relative w-6 h-6 text-slate-500 
+        flex items-center justify-center"
+          >
+            <User className="w-5 h-5 absolute" />
+            <ChevronDown className="w-4 h-4 absolute top-4" />
+          </div>
+        );
+    }
+  };
+
+
+
+const stats = [
+    {
+      title: "Total",
+      value: notifications.length,
+      bg: "bg-blue-50",
+      iconBg: "bg-blue-100",
+      textColor: "text-blue-600",
+      titleColor: "text-blue-800",
+      valueColor: "text-blue-900",
+      Icon: User,
+    },
+    {
+      title: "Unread",
+      value: unreadCount,
+      bg: "bg-red-50",
+      iconBg: "bg-red-100",
+      textColor: "text-red-600",
+      titleColor: "text-red-800",
+      valueColor: "text-red-900",
+      Icon: AlertCircle,
+    },
+    {
+      title: "High Priority",
+      value: notifications.filter((n) => n.priority === "high").length,
+      bg: "bg-yellow-50",
+      iconBg: "bg-yellow-100",
+      textColor: "text-yellow-600",
+      titleColor: "text-yellow-800",
+      valueColor: "text-yellow-900",
+      Icon: Clock,
+    },
+    {
+      title: "This Week",
+      value: notifications.filter((n) => {
+        const notifDate = new Date(n.date);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return notifDate >= weekAgo;
+      }).length,
+      bg: "bg-green-50",
+      iconBg: "bg-green-100",
+      textColor: "text-green-600",
+      titleColor: "text-green-800",
+      valueColor: "text-green-900",
+      Icon: CheckCircle2,
+    },
+  ];
+
+
+ const feedbackStats = [
+    {
+      type: "general",
+      title: "Total Feedback",
+      bg: "bg-blue-50",
+      iconBg: "bg-blue-100",
+      textColor: "text-blue-800",
+      valueColor: "text-blue-900",
+      getCount: (feedback) => feedback?.length || 0,
+    },
+    {
+      type: "positive",
+      title: "Positive",
+      bg: "bg-green-50",
+      iconBg: "bg-green-100",
+      textColor: "text-green-800",
+      valueColor: "text-green-900",
+      getCount: (feedback) =>
+        feedback.filter((f) => f.type === "positive").length,
+    },
+    {
+      type: "negative",
+      title: "Needs Revision",
+      bg: "bg-yellow-50",
+      iconBg: "bg-yellow-100",
+      textColor: "text-yellow-800",
+      valueColor: "text-yellow-900",
+      getCount: (feedback) =>
+        feedback.filter((f) => f.type === "negative").length,
+    },
+  ];
+
+
+
+ const getBulletColor = (type, priority) => {
+    const t = (type || "").toLowerCase();
+    const p = (priority || "").toLowerCase();
+    if (p === "high" && (t === "rejection" || t === "reject")) return "bg-red-600";
+    if (p === "medium" && (t === "deadline" || t === "due")) return "bg-orange-500";
+    if (p === "high") return "bg-red-500";
+    if (p === "medium") return "bg-yellow-500";
+    if (p === "low") return "bg-slate-400";
+    // type-based fallback
+    if (t === "approval" || t === "approved") return "bg-green-600";
+    if (t === "request") return "bg-blue-600";
+    if (t === "feedback") return "bg-purple-600";
+    if (t === "meeting") return "bg-cyan-600";
+    if (t === "system") return "bg-slate-600";
+    return "bg-slate-400";
+  };
+
+  const getBadgeClasses = (kind, value) => {
+    const v = (value || "").toLowerCase();
+    if (kind === "type") {
+      if (["rejection", "reject"].includes(v)) return "bg-red-100 text-red-800";
+      if (["approval", "approved"].includes(v)) return "bg-green-100 text-green-800";
+      if (["deadline", "due"].includes(v)) return "bg-orange-100 text-orange-800";
+      if (v === "request") return "bg-blue-100 text-blue-800";
+      if (v === "feedback") return "bg-purple-100 text-purple-800";
+      if (v === "meeting") return "bg-cyan-100 text-cyan-800";
+      if (v === "system") return "bg-slate-100 text-slate-800";
+      return "bg-gray-100 text-gray-800";
+    }
+    // priority
+    if (v === "high") return "bg-red-100 text-red-800";
+    if (v === "medium") return "bg-yellow-100 text-yellow-800";
+    if (v === "low") return "bg-gray-100 text-gray-800";
+    return "bg-slate-100 text-slate-800";
+  };
+
+
+
+
+const dashboardStats = [
+    {
+      title: "Total Students",
+      value: stats?.totalStudents ?? 0,
+      bg: "bg-blue-100",
+      iconBg: "bg-blue-100",
+      iconColor: "text-blue-600",
+      Icon: User,
+    },
+    {
+      title: "Total Teachers",
+      value: stats?.totalTeachers ?? 0,
+      bg: "bg-green-100",
+      iconBg: "bg-green-100",
+      iconColor: "text-green-600",
+      Icon: Box,
+    },
+    {
+      title: "Pending Requests",
+      value: stats?.pendingRequests ?? 0,
+      bg: "bg-orange-100",
+      iconBg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      Icon: AlertCircle,
+    },
+    {
+      title: "Active Projects",
+      value: stats?.totalProjects ?? 0,
+      bg: "bg-yellow-100",
+      iconBg: "bg-yellow-100",
+      iconColor: "text-yellow-600",
+      Icon: Folder,
+    },
+    {
+      title: "Nearing Deadlines",
+      value: nearingDeadlines,
+      bg: "bg-red-100",
+      iconBg: "bg-red-100",
+      iconColor: "text-red-600",
+      Icon: AlertTriangle,
+    },
+  ];
+
+  const actionButtons = [
+    {
+      label: "Add Student",
+      onClick: () => dispatch(toggleStudentModal()),
+      btnClass: "btn-primary",
+      Icon: PlusIcon, // lucide-react icon
+    },
+    {
+      label: "Add Teacher",
+      onClick: () => dispatch(toggleTeacherModal()),
+      btnClass: "btn-secondary",
+      Icon: PlusIcon,
+    },
+    {
+      label: "View Reports",
+      onClick: () => setIsReportsOpen(true),
+      btnClass: "btn-outline",
+      Icon: FileTextIcon,
+    },
+  ];
+
+
+
+const dashboardCards = [
+    {
+      title: "Assigned Students",
+      value: studentProjects.filter((r) => !!r.supervisor).length,
+      icon: CheckCircle,
+      bg: "bg-green-100",
+      color: "text-green-600",
+    },
+    {
+      title: "Unassigned Students",
+      value: studentProjects.filter((r) => !r.supervisor).length,
+      icon: AlertTriangle,
+      bg: "bg-red-100",
+      color: "text-red-600",
+    },
+    {
+      title: "Available Teachers",
+      value: teachers.filter(
+        (t) => (t.assignedCount ?? 0) < (t.maxStudents ?? 0)
+      ).length,
+      icon: Users,
+      bg: "bg-blue-100",
+      color: "text-blue-600",
+    },
+  ];
+
+  // TABLE HEADER
+  const headers = [
+    "Student",
+    "Project Title",
+    "Supervisor",
+    "Deadline",
+    "Updated",
+    "Assign Supervisor",
+    "Actions",
+  ];
+
+
+
+
+--------TEACHER DASHBOARD-------
+
+
+  const statsCards = [
+  {
+    title: "Assigned Students",
+    value: authUser?.assignedStudents?.length || 0,
+    loading,
+    icon: Users,
+    bg: "bg-blue-100",
+    color: "text-blue-600",
+  },
+  {
+    title: "Pending Requests",
+    value: dashboardStats?.totalPendingRequests || 0,
+    loading,
+    icon: Clock,
+    bg: "bg-yellow-100",
+    color: "text-yellow-600",
+  },
+  {
+    title: "Completed Projects",
+    value: dashboardStats?.completedProjects || 0,
+    loading,
+    icon: CheckCircle,
+    bg: "bg-green-100",
+    color: "text-green-600",
+  },
+];
+
+
+
+--------- PENDING REQUESTS -----------
+const stats = [
+  { label: "Pending", status: "pending", bg: "bg-yellow-50", text: "text-yellow-700", sub: "text-yellow-600" },
+  { label: "Approved", status: "approved", bg: "bg-green-50", text: "text-green-700", sub: "text-green-600" },
+  { label: "Rejected", status: "rejected", bg: "bg-red-50", text: "text-red-700", sub: "text-red-600" },
+];
+
+
+
+------------ASSIGNED STUDENTS----------------
+const stats = [
+  {
+    label: "Total Students",
+    value: sortedStudents.length,
+    bg: "bg-blue-50",
+    text: "text-blue-700",
+    sub: "text-blue-600",
+  },
+  {
+    label: "Projects Completed",
+    value: sortedStudents.filter(
+      (s) => s.project?.status === "completed"
+    ).length,
+    bg: "bg-green-50",
+    text: "text-green-700",
+    sub: "text-green-600",
+  },
+  {
+    label: "In Progress",
+    value: sortedStudents.filter(
+      (s) => s.project?.status === "in_progress"
+    ).length,
+    bg: "bg-yellow-50",
+    text: "text-yellow-700",
+    sub: "text-yellow-600",
+  },
+  {
+    label: "Total Projects",
+    value: sortedStudents.length,
+    bg: "bg-purple-50",
+    text: "text-purple-700",
+    sub: "text-purple-600",
+  },
+];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * Request Accepted Email
+ */
+export function generateRequestAcceptedTemplate(supervisorName) {
+  return `
+    <div style="font-family: Arial; padding:20px; background:#fff; border:1px solid #ddd; border-radius:8px;">
+      <h2 style="color:#10b981;">✅ Supervisor Request Accepted</h2>
+      <p>Your supervisor request has been accepted by <strong>${supervisorName}</strong>.</p>
+      <p>You can now start working on your project and upload files.</p>
+    </div>
+  `;
+}
+
+/**
+ * Request Rejected Email
+ */
+export function generateRequestRejectedTemplate(supervisorName) {
+  return `
+    <div style="font-family: Arial; padding:20px; background:#fff; border:1px solid #ddd; border-radius:8px;">
+      <h2 style="color:#ef4444;">❌ Supervisor Request Rejected</h2>
+      <p>Your supervisor request has been rejected by <strong>${supervisorName}</strong>.</p>
+      <p>You can try requesting another supervisor.</p>
+    </div>
+  `;
+}
+
+
+
+
+  const getFileIcon = (type) => {
+    switch (type.toLowerCase()) {
+      case "pdf":
+        return <FileText className="w-8 h-8 text-red-500" />;
+
+      case "doc":
+      case "docx":
+        return <FileText className="w-8 h-8 text-blue-500" />;
+
+      case "ppt":
+      case "pptx":
+        return <FileSpreadsheet className="w-8 h-8 text-orange-500" />;
+
+      case "zip":
+      case "rar":
+        return <FileArchive className="w-8 h-8 text-yellow-500" />;
+
+      default:
+        return <File className="w-8 h-8 text-slate-500" />;
+    }
+  };
+
+
+const fileStats = [
+    {
+      label: "Total Files",
+      count: files.length,
+      bg: "bg-blue-50",
+      text: "text-blue-600",
+      value: "text-blue-700",
+    },
+    {
+      label: "Reports",
+      count: files.filter((f) => f.category === "report").length,
+      bg: "bg-green-50",
+      text: "text-green-600",
+      value: "text-green-700",
+    },
+    {
+      label: "Presentations",
+      count: files.filter((f) => f.category === "presentation").length,
+      bg: "bg-orange-50",
+      text: "text-orange-600",
+      value: "text-orange-700",
+    },
+    {
+      label: "Code Files",
+      count: files.filter((f) => f.category === "code").length,
+      bg: "bg-purple-50",
+      text: "text-purple-600",
+      value: "text-purple-700",
+    },
+    {
+      label: "Images",
+      count: files.filter((f) => f.category === "image").length,
+      bg: "bg-pink-50",
+      text: "text-pink-600",
+      value: "text-pink-700",
+    },
+  ];
+
+  const tableHeadData = [
+    "File Name",
+    "Student",
+    "Type",
+    "Upload Date",
+    "Actions",
+  ];
+
+
+
+const getStatusColor = (status) => {
+    switch (status) {
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "approved":
+        return "bg-blue-100 text-blue-800";
+
+      case "pending":
+        return "bg-orange-100 text-orange-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+
+
+const projectStats = [
+    {
+      title: "Total Projects",
+      value: projects.length,
+      bg: "bg-blue-100",
+      iconColor: "text-blue-600",
+      Icon: Folder,
+    },
+    {
+      title: "Pending Review",
+      value: projects.filter((p) => p.status === "pending").length,
+      bg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      Icon: AlertTriangle,
+    },
+    {
+      title: "Completed",
+      value: projects.filter((p) => p.status === "completed").length,
+      bg: "bg-green-100",
+      iconColor: "text-green-600",
+      Icon: CheckCircle2,
+    },
+    {
+      title: "Rejected",
+      value: projects.filter((p) => p.status === "rejected").length,
+      bg: "bg-red-100",
+      iconColor: "text-red-600",
+      Icon: X,
+    },
+  ];
+
+
+
+
+const projectStats = [
+    {
+      title: "Total Projects",
+      value: projects.length,
+      bg: "bg-blue-100",
+      iconColor: "text-blue-600",
+      Icon: Folder,
+    },
+    {
+      title: "Pending Review",
+      value: projects.filter((p) => p.status === "pending").length,
+      bg: "bg-orange-100",
+      iconColor: "text-orange-600",
+      Icon: AlertTriangle,
+    },
+    {
+      title: "Completed",
+      value: projects.filter((p) => p.status === "completed").length,
+      bg: "bg-green-100",
+      iconColor: "text-green-600",
+      Icon: CheckCircle2,
+    },
+    {
+      title: "Rejected",
+      value: projects.filter((p) => p.status === "rejected").length,
+      bg: "bg-red-100",
+      iconColor: "text-red-600",
+      Icon: X,
+    },
+  ];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Smart Deadline & Project Tracking System
+
+This project is a web-based system designed to help universities manage student projects and their deadlines efficiently. Supervisors can assign deadlines to approved projects, while students can easily view their project status and submission dates. The system provides real-time updates, role-based access, and a clear overview of project progress, making project management simple, transparent, and organized.
+
+
+-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
