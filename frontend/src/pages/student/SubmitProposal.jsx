@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { submitProposal } from "../../store/slices/studentSlice";
+import { useDispatch } from "react-redux"; 
 
 const SubmitProposal = () => {
   return <></>;

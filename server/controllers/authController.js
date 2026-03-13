@@ -36,10 +36,13 @@ export const registerUser = asyncHandler(async (req, res, next) => {
 });
 
 
-
-// Login
 export const login = asyncHandler(async (req, res, next) => {
 
+    // check user already logged in
+   /*  if (req.cookies.token) {
+        return next(new ErrorHandler("User already logged in", 400));
+    }
+ */
     const { email, password, role } = req.body;
 
     if (!email || !password || !role) {
@@ -155,7 +158,7 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     }
 
     if (!req.body.password || !req.body.confirmPassword) {
-        return next(new ErrorHandler("Please provide a new password", 400));
+        return next(new ErrorHandler("Please provide all required fields.", 400));
     }
 
     if (req.body.password !== req.body.confirmPassword) {

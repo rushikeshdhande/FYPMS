@@ -3,6 +3,16 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 
 const ResetPasswordPage = () => {
+
+  const [formData, setFormData] = useState({
+    password:"",
+    confirmPassword:"",
+
+  })
+
+  
+
+
   return <></>;
 };
 

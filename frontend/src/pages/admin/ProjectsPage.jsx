@@ -1,16 +1,5 @@
 import { useMemo, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-// import {
-//   getAllProjects,
-//   approveProject,
-//   rejectProject,
-// } from "../../store/slices/adminSlice";
-
-// import {
-//   downloadProjectFile,
-//   getProject,
-//   updateProject,
-// } from "../../store/slices/projectSlice";
+import { useDispatch, useSelector } from "react-redux"; 
 
 import { toast } from "react-toastify";
 

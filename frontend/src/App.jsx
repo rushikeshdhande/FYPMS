@@ -37,7 +37,23 @@ import { Loader } from "lucide-react";
 const App = () => {
 
   return (
-    <></>
+     <BrowserRouter>
+
+      {/* Toast Messages */}
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <Routes>
+
+        {/* Default redirect */}
+        <Route path="/" element={<Navigate to="/login" />} />
+
+        {/* Auth Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+      </Routes>
+    </BrowserRouter>
   );
 };
 
