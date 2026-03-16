@@ -96,81 +96,79 @@ export const getUser = asyncHandler(async (req, res, next) => {
 });
 
 
-
 // Forget Password
 export const forgetPassword = asyncHandler(async (req, res, next) => {
+  // Check if email exists in request body
+  if (!req.body.email) {
+    return next(new ErrorHandler("Please provide email address", 400));
+  }
 
-    const user = await User.findOne({ email: req.body.email });
+  const user = await User.findOne({ email: req.body.email });
 
-    if (!user) {
-        return next(new ErrorHandler("User not found with this email", 404));
-    }
+  if (!user) {
+    return next(new ErrorHandler("User not found with this email", 404));
+  }
 
-    const resetToken = user.getResetPasswordToken();
+  const resetToken = user.getResetPasswordToken();
 
-    await user.save({ validateBeforeSave: false });
+  await user.save({ validateBeforeSave: false });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+  const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
 
-   const message = generateForgetPasswordEmailTemplate(resetUrl);
+  const message = generateForgetPasswordEmailTemplate(resetUrl);
 
-    try {
+  try {
+    await sendEmail(user.email, "Password Reset Request", message);
 
-        await sendEmail(user.email, "Password Reset Request", message);
-
-        res.status(200).json({
-            success: true,
-            message: `Email sent to ${user.email} successfully`,
-        });
-
-    } catch (error) {
-
-        user.resetPasswordToken = undefined;
-        user.resetPasswordExpire = undefined;
-
-        await user.save({ validateBeforeSave: false });
-
-        return next(new ErrorHandler(error.message || "Cannot send email", 500));
-
-    }
-
-});
-
-
-
-// Reset Password
-export const resetPassword = asyncHandler(async (req, res, next) => {
-
-    const { token } = req.params;
-
-    const resetPasswordToken = crypto
-        .createHash("sha256")
-        .update(token)
-        .digest("hex");
-
-    const user = await User.findOne({
-        resetPasswordToken,
-        resetPasswordExpire: { $gt: Date.now() },
+    res.status(200).json({
+      success: true,
+      message: `Email sent to ${user.email} successfully`,
     });
-
-    if (!user) {
-        return next(new ErrorHandler("Invalid or expired password reset token", 400));
-    }
-
-    if (!req.body.password || !req.body.confirmPassword) {
-        return next(new ErrorHandler("Please provide all required fields.", 400));
-    }
-
-    if (req.body.password !== req.body.confirmPassword) {
-        return next(new ErrorHandler("Password and confirm password do not match", 400));
-    }
-
-    user.password = req.body.password;
+  } catch (error) {
     user.resetPasswordToken = undefined;
     user.resetPasswordExpire = undefined;
 
-    await user.save();
+    await user.save({ validateBeforeSave: false });
 
-    generateToken(user, 200, "Password reset successfully", res);
+    return next(new ErrorHandler(error.message || "Cannot send email", 500));
+  }
+});
 
+// Reset Password
+export const resetPassword = asyncHandler(async (req, res, next) => {
+  const { token } = req.params; // Get token from params, not query
+
+  if (!token) {
+    return next(new ErrorHandler("Reset token is required", 400));
+  }
+
+  const resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(token)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken,
+    resetPasswordExpire: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(new ErrorHandler("Invalid or expired password reset token", 400));
+  }
+
+  if (!req.body.password || !req.body.confirmPassword) {
+    return next(new ErrorHandler("Please provide all required fields.", 400));
+  }
+
+  if (req.body.password !== req.body.confirmPassword) {
+    return next(new ErrorHandler("Password and confirm password do not match", 400));
+  }
+
+  user.password = req.body.password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpire = undefined;
+
+  await user.save();
+
+  generateToken(user, 200, "Password reset successfully", res);
 });

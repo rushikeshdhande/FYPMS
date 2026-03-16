@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import { connectDB } from './config/db.js';
 import { errorMiddleware } from './middlewares/error.js';
 import authRouter from './router/userRoutes.js'
+import adminRouter from './router/adminRoutes.js'
 
 // Load environment variables from .env file
 config();
@@ -33,6 +34,7 @@ app.use(express.urlencoded({ extended : true}))
 
 // Routes
 app.use( "/api/v1/auth", authRouter);
+app.use( "/api/v1/admin", adminRouter);
 
 // Error Middleware (Always LAST)
 app.use(errorMiddleware)

@@ -19,6 +19,6 @@ router.get("/me", isAuthenticatedUser, getUser);
 router.get("/logout", isAuthenticatedUser, logout);
 
 router.post("/password/forgot", forgetPassword);
-router.put("/password/reset/:token", resetPassword);
+router.put("/password/reset/:token", resetPassword); // Make sure this is :token param
 
 export default router;

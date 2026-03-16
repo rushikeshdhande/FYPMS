@@ -58,7 +58,7 @@ const adminSlice = createSlice({
     error: null,
   },
   reducers: {},
-  extraReducers: (builder) => {},
+  extraReducers: () => {},
 });
 
 export default adminSlice.reducer;

@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import {  useEffect } from "react";
 
 // Auth Pages
 import LoginPage from "./pages/auth/LoginPage";
@@ -33,8 +33,26 @@ import ProjectsPage from "./pages/admin/ProjectsPage";
 import { useDispatch, useSelector } from "react-redux";
 import { ToastContainer } from "react-toastify";
 import { Loader } from "lucide-react";
+import { getUser } from "./store/slices/authSlice";
 
 const App = () => {
+
+  const {authUser, isCheckingAuth} = useSelector((state) => state.auth);
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Check if user is already authenticated on app load
+    dispatch(getUser());
+  }, [dispatch]);
+
+  if (isCheckingAuth && !authUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader className="size-10 animate-spin" />
+      </div>
+    );
+  }
 
   return (
      <BrowserRouter>
