@@ -3,7 +3,7 @@ import axios from "axios";
 
 // Create axios instance with correct configuration
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1",
+  baseURL: import.meta.env.VITE_API_URL || "https://fypms-m9rx.onrender.com/api/v1",
   withCredentials: true, // ✅ CRITICAL: This sends cookies with every request
   headers: {
     "Content-Type": "application/json",

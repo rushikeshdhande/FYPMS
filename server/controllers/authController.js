@@ -239,15 +239,14 @@ export const logout = asyncHandler(async (req, res, next) => {
     .cookie("token", "", {
       expires: new Date(Date.now()),
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,          // ✅ MUST
+      sameSite: "None",      // 🔥 FIX
     })
     .json({
       success: true,
       message: "Logged out successfully",
     });
 });
-
 // ---------- Get current user ----------
 export const getUser = asyncHandler(async (req, res, next) => {
   const user = req.user;
