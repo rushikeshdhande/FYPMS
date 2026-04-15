@@ -4,15 +4,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../../store/slices/authSlice";
 import { BookOpen, Loader, Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
-  const { isLoggingIn, authUser } = useSelector((state) => state.auth);
+  const { isLoggingIn, authUser, error } = useSelector((state) => state.auth);
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    role: "Student", // This is just for UI, actual role comes from backend
+    role: "Student",
   });
 
   const [errors, setErrors] = useState({});
@@ -48,8 +49,6 @@ const LoginPage = () => {
     }
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
     }
 
     setErrors(newErrors);
@@ -67,40 +66,39 @@ const LoginPage = () => {
       role: formData.role,
     };
 
+    console.log("Submitting login:", data); // Debug log
     dispatch(login(data));
   };
 
   // Navigate based on actual user role from backend
   useEffect(() => {
+    console.log("AuthUser changed:", authUser); // Debug log
+    
     if (authUser) {
       // Get the user's role from the authUser object
-      // Try different possible paths where the role might be stored
-      const userRole = authUser.role || 
-                      authUser.user?.role || 
-                      authUser.userType || 
-                      authUser.type ||
-                      authUser.accountType;
+      const userRole = authUser.role;
       
-      console.log("Full authUser object:", authUser); // Debug: see the entire user object
-      console.log("User role from backend:", userRole); // Debug: see what role we got
-      
-      // Convert to lowercase for case-insensitive comparison
-      const roleLowerCase = userRole?.toLowerCase();
-      
+      console.log("User role from backend:", userRole);
+
       // Navigate based on the actual role from backend
-      if (roleLowerCase === "admin") {
+      if (userRole === "Admin") {
         navigate("/admin");
-      } else if (roleLowerCase === "teacher") {
+      } else if (userRole === "Teacher") {
         navigate("/teacher");
-      } else if (roleLowerCase === "student") {
+      } else if (userRole === "Student") {
         navigate("/student");
       } else {
-        // If role doesn't match any of the above, go to dashboard
-        console.log("Unknown role:", userRole);
         navigate("/dashboard");
       }
     }
-  }, [authUser, navigate]); // Remove formData.role from dependencies
+  }, [authUser, navigate]);
+
+  // Show error from Redux
+  useEffect(() => {
+    if (error) {
+      toast.error(error);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
@@ -117,22 +115,17 @@ const LoginPage = () => {
         </div>
 
         {/* Login form */}
-        <div className="card">
-          
+        <div className="bg-white rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {errors.general && (
-              <div className="p-3 bg-red-50 border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{errors.general}</p>
-              </div>
-            )}
-            
             {/* Role selection */}
             <div>
-              <label className="label">Select Role</label>
-              <select 
-                name="role" 
-                className="input" 
-                value={formData.role} 
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Select Role
+              </label>
+              <select
+                name="role"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                value={formData.role}
                 onChange={handleChange}
               >
                 <option value="Student">Student</option>
@@ -143,30 +136,38 @@ const LoginPage = () => {
 
             {/* Email Address */}
             <div>
-              <label className="label">Email Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email Address
+              </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`input ${errors.email ? "input-error" : ""}`}
+                className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${
+                  errors.email ? "border-red-500" : ""
+                }`}
                 placeholder="Enter your email"
               />
               {errors.email && (
                 <p className="text-sm text-red-600 mt-1">{errors.email}</p>
               )}
             </div>
-            
-            {/* Password with show/hide functionality */}
+
+            {/* Password */}
             <div>
-              <label className="label">Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`input ${errors.password ? "input-error" : ""} pr-10`}
+                  className={`w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10 ${
+                    errors.password ? "border-red-500" : ""
+                  }`}
                   placeholder="Enter your password"
                 />
                 <button
@@ -200,7 +201,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={isLoggingIn}
-              className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoggingIn ? (
                 <div className="flex items-center justify-center">
@@ -211,6 +212,15 @@ const LoginPage = () => {
                 "Sign in"
               )}
             </button>
+
+            <div className="mt-6 text-center">
+              <p className="text-sm text-slate-600">
+                Don't have an account?{" "}
+                <Link to="/register" className="text-blue-600 hover:text-blue-500 font-medium">
+                  Sign up
+                </Link>
+              </p>
+            </div>
           </form>
         </div>
       </div>

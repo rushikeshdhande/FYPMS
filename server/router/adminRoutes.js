@@ -1,3 +1,4 @@
+// router/adminRoutes.js
 import express from "express";
 const router = express.Router();
 
@@ -5,32 +6,67 @@ import {
   createStudent,
   updateStudent,
   deleteStudent,
+  createTeacher,
+  updateTeacher,
+  deleteTeacher,
+  getAllUsers,
 } from "../controllers/adminController.js";
 
 import {
-  isAuthenticatedUser,
-  isAuthorized,
+  isAuthenticated,  // Changed from isAuthenticatedUser
+  authorizeRoles,   // Changed from isAuthorized
 } from "../middlewares/authMiddleware.js";
 
+// Student routes
 router.post(
   "/create-student",
-  isAuthenticatedUser,
-  isAuthorized("Admin"),
+  isAuthenticated,
+  authorizeRoles("Admin"),
   createStudent
 );
 
 router.put(
   "/update-student/:id",
-  isAuthenticatedUser,
-  isAuthorized("Admin"),
+  isAuthenticated,
+  authorizeRoles("Admin"),
   updateStudent
 );
 
 router.delete(
   "/delete-student/:id",
-  isAuthenticatedUser,
-  isAuthorized("Admin"),
+  isAuthenticated,
+  authorizeRoles("Admin"),
   deleteStudent
+);
+
+// Teacher routes
+router.post(
+  "/create-teacher",
+  isAuthenticated,
+  authorizeRoles("Admin"),
+  createTeacher
+);
+
+router.put(
+  "/update-teacher/:id",
+  isAuthenticated,
+  authorizeRoles("Admin"),
+  updateTeacher
+);
+
+router.delete(
+  "/delete-teacher/:id",
+  isAuthenticated,
+  authorizeRoles("Admin"),
+  deleteTeacher
+);
+
+// Get all users
+router.get(
+  "/users",
+  isAuthenticated,
+  authorizeRoles("Admin"),
+  getAllUsers
 );
 
 export default router;

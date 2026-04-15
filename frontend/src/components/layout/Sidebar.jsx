@@ -1,4 +1,4 @@
-import { useState } from "react";
+ 
 import { NavLink, useLocation } from "react-router-dom";
 
 const Sidebar = ({ open, setOpen, userRole }) => {
@@ -63,6 +63,7 @@ const Sidebar = ({ open, setOpen, userRole }) => {
         return [];
     }
   };
+ 
 
   const getIcon = (iconName, isActive = false) => {
     const className = `w-5 h-5 ${isActive ? "text-blue-600" : "text-slate-600"
@@ -394,7 +395,7 @@ const Sidebar = ({ open, setOpen, userRole }) => {
                 </NavLink>
               );
             })}
-          </nav> */}
+          </nav> 
 
       {/* Mobile footer */}
       {/* <div className="p-4 border-t border-slate-200">

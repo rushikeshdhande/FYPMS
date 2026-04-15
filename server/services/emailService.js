@@ -1,27 +1,26 @@
-import nodeMailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 export const sendEmail = async (to, subject, message) => {
-    try {
-        const transporter = nodeMailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASSWORD,
-            },
-            service: process.env.SMTP_SERVICE,
-        });
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // ✅ direct Gmail use
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
-        const mailOptions = {
-            from: process.env.SMTP_USER,
-            to,
-            subject,
-            html: message,
-        };
+    const mailOptions = {
+      from: `"Your App" <${process.env.EMAIL_USER}>`,
+      to,
+      subject,
+      html: message,
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        return info;
-    } catch (error) {
-        throw new Error(error.message || "Cannot send email");
-    }
+    const info = await transporter.sendMail(mailOptions);
+    return info;
+
+  } catch (error) {
+    throw new Error(error.message || "Cannot send email");
+  }
 };

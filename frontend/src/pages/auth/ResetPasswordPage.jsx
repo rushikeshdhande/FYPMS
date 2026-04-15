@@ -1,118 +1,67 @@
-import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { KeyRound, Loader, Eye, EyeOff } from "lucide-react"; 
+import { KeyRound, Loader, Eye, EyeOff } from "lucide-react";
 import { resetPassword } from "../../store/slices/authSlice";
+import toast from "react-hot-toast";
 
 const ResetPasswordPage = () => {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const dispatch = useDispatch();
-  const { isUpdatingPassword, error: authError } = useSelector((state) => state.auth);
-  
-  const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
-  });
-
-  const [errors, setErrors] = useState({});
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [token, setToken] = useState("");
   
-  const token = searchParams.get("token");
+  const { isUpdatingPassword } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (errors[name]) {
-      setErrors((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
+  useEffect(() => {
+    // Extract token from URL query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const tokenFromUrl = queryParams.get("token");
+    
+    if (tokenFromUrl) {
+      setToken(tokenFromUrl);
+    } else {
+      toast.error("Invalid reset link. Please request a new one.");
+      navigate("/forgot-password");
     }
-  };
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const toggleConfirmPasswordVisibility = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.password) {
-      newErrors.password = "Password is required";
-    } else if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Please confirm your password";
-    } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  }, [location, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
 
-    if (!validateForm()) {
+    if (!password) {
+      setError("Password is required");
+      toast.error("Password is required");
       return;
     }
 
-    if (!token) {
-      setErrors({ general: "Invalid or missing reset token" });
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      toast.error("Password must be at least 8 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
     try {
-      await dispatch(resetPassword({ 
-        token, 
-        password: formData.password,
-        confirmPassword: formData.confirmPassword
-      })).unwrap();
-
-      // Redirect to login page with success message
-      navigate("/login", { 
-        state: { message: "Password reset successfully! Please login with your new password." } 
-      });
+      await dispatch(resetPassword({ token, password, confirmPassword })).unwrap();
+      toast.success("Password reset successful! Please login with your new password.");
+      navigate("/login");
     } catch (error) {
-      setErrors({ 
-        general: error || "Failed to reset password. Please try again" 
-      });
+      console.error("Reset password error:", error);
+      setError(error || "Failed to reset password. Please try again.");
     }
   };
-
-  if (!token) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="bg-white rounded-lg shadow-sm p-8">
-            <div className="p-3 bg-red-50 border-red-200 rounded-lg mb-4">
-              <p className="text-sm text-red-600">Invalid or missing reset token</p>
-            </div>
-            <Link 
-              to="/forgot-password" 
-              className="text-blue-600 hover:text-blue-500 font-medium"
-            >
-              Request a new password reset link
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
@@ -125,108 +74,92 @@ const ResetPasswordPage = () => {
           <h2 className="text-2xl font-bold text-slate-800">
             Reset Password
           </h2>
-          <p className="text-slate-600 mt-2">Enter your new password below.</p>
+          <p className="text-slate-600 mt-2">
+            Please enter your new password below.
+          </p>
         </div>
 
         {/* Reset password form */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
+        <div className="bg-white rounded-lg shadow-md p-6">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {(errors.general || authError) && (
-              <div className="p-3 bg-red-50 border-red-200 rounded-lg">
-                <p className="text-sm text-red-600">{errors.general || authError}</p>
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
 
-            {/* New password */}
+            {/* New Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 New Password
               </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`block w-full px-3 py-2 border ${
-                    errors.password ? 'border-red-300' : 'border-slate-300'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10`}
-                  placeholder="Enter your new password"
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError("");
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  placeholder="Enter new password"
                   disabled={isUpdatingPassword}
                 />
                 <button
                   type="button"
-                  onClick={togglePasswordVisibility}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-sm text-red-600 mt-1">{errors.password}</p>
-              )}
             </div>
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Confirm Password
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm New Password
               </label>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`block w-full px-3 py-2 border ${
-                    errors.confirmPassword ? 'border-red-300' : 'border-slate-300'
-                  } rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10`}
-                  placeholder="Confirm your new password"
+                  value={confirmPassword}
+                  onChange={(e) => {
+                    setConfirmPassword(e.target.value);
+                    if (error) setError("");
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 pr-10"
+                  placeholder="Confirm new password"
                   disabled={isUpdatingPassword}
                 />
                 <button
                   type="button"
-                  onClick={toggleConfirmPasswordVisibility}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-red-600 mt-1">{errors.confirmPassword}</p>
-              )}
             </div>
 
             {/* Submit button */}
             <button
               type="submit"
               disabled={isUpdatingPassword}
-              className="w-full flex justify-center items-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isUpdatingPassword ? (
                 <div className="flex items-center justify-center">
                   <Loader className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
-                  Resetting...
+                  Resetting Password...
                 </div>
               ) : (
                 "Reset Password"
               )}
             </button>
 
-            {/* Back to login link */}
-            <div className="text-center mt-4">
-              <Link 
-                to="/login" 
-                className="text-sm text-blue-600 hover:text-blue-500 font-medium"
-              >
+            <div className="text-center">
+              <Link to="/login" className="text-sm text-blue-600 hover:text-blue-500">
                 Back to Login
               </Link>
             </div>

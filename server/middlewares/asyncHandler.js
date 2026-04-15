@@ -1,3 +1,4 @@
-export const asyncHandler = (theFunction) => (req, res, next) => {
-    Promise.resolve(theFunction(req, res, next)).catch(next);
-}   
+// middlewares/asyncHandler.js
+export const asyncHandler = (fn) => (req, res, next) => {
+  Promise.resolve(fn(req, res, next)).catch(next);
+};

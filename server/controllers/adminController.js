@@ -194,7 +194,6 @@ export const updateTeacher = asyncHandler(async (req, res, next) => {
   });
 });
 
-
 export const deleteTeacher = asyncHandler(async (req, res, next) => {
   const { id } = req.params;
 
@@ -217,10 +216,15 @@ export const deleteTeacher = asyncHandler(async (req, res, next) => {
 });
 
 export const getAllUsers = asyncHandler(async (req, res, next) => {
-    const {users} = await userServices.getAllUsers();
-    res.status(200).json({
-        success: true,
-        message: "Users fetched successfully",
-        data: {users},
-    })
+  const users = await userServices.getAllUsers();
+  console.log("Fetched users in controller:", users); // Debug log
+  res.status(200).json({
+    success: true,
+    message: "Users fetched successfully",
+    data: { users },
+  });
 });
+
+export const assignSupervisor = asyncHandler(async (req, res, next) => {});
+export const getAllProject = asyncHandler(async (req, res, next) => {});
+export const getDashboardStats = asyncHandler(async (req, res, next) => {});

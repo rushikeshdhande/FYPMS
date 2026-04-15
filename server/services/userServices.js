@@ -70,5 +70,8 @@ export const getAllUsers = async () => {
     .select("-password -resetPasswordToken -resetPasswordExpire")
     .sort({ createdAt: -1 });
 
+   // console.log("Fetched users:", users); // Debug log
+
+
   return users;
 };
