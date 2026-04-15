@@ -235,17 +235,32 @@ export const login = asyncHandler(async (req, res, next) => {
 
 // ---------- Logout ----------
 export const logout = asyncHandler(async (req, res, next) => {
-  res.status(200)
-    .cookie("token", "", {
-      expires: new Date(Date.now()),
-      httpOnly: true,
-      secure: true,          // ✅ MUST
-      sameSite: "None",      // 🔥 FIX
-    })
-    .json({
-      success: true,
-      message: "Logged out successfully",
-    });
+  // Clear the cookie
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    expires: new Date(0) // Force expiration
+  });
+  
+  // Optional: Add token to blacklist if you want to invalidate it immediately
+  // This prevents using the same token again
+  const token = req.cookies.token;
+  if (token) {
+    try {
+      // You can store invalidated tokens in Redis or database
+      // For now, we'll just clear the cookie
+      console.log("User logged out successfully");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }
+  
+  res.status(200).json({
+    success: true,
+    message: "Logged out successfully"
+  });
 });
 // ---------- Get current user ----------
 export const getUser = asyncHandler(async (req, res, next) => {
@@ -286,6 +301,57 @@ export const updateProfile = asyncHandler(async (req, res, next) => {
     message: "Profile updated successfully",
     user,
   });
+});
+
+export const logoutSecure = asyncHandler(async (req, res, next) => {
+  try {
+    const token = req.cookies.token;
+    
+    if (token) {
+      // Decode token to get user info (optional)
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      
+      // Optional: Store token in blacklist database
+      // await TokenBlacklist.create({ 
+      //   token, 
+      //   userId: decoded.id,
+      //   expiresAt: new Date(decoded.exp * 1000)
+      // });
+      
+      // Optional: Update user's last logout time
+      // await User.findByIdAndUpdate(decoded.id, { lastLogout: new Date() });
+    }
+    
+    // Clear cookie with all options
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      domain: process.env.NODE_ENV === "production" ? ".yourdomain.com" : undefined
+    });
+    
+    // Also clear any other session cookies
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/"
+    });
+    
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+    // Even if there's an error, try to clear the cookie
+    res.clearCookie("token");
+    res.status(200).json({
+      success: true,
+      message: "Logged out successfully"
+    });
+  }
 });
 
 // ---------- Change password ----------

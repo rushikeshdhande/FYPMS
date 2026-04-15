@@ -6,11 +6,12 @@ import {
   resendOtp,
   registerUser,
   login,
-  logout,
+  logout,  // Make sure this is imported
+  logoutSecure, // Optional
   getUser,
   updateProfile,
   changePassword,
-  forgetPassword,  // Make sure this is imported
+  forgetPassword,
   resetPassword,
   deleteAccount,
 } from "../controllers/authController.js";
@@ -24,10 +25,12 @@ router.post("/register/verify", verifyRegistrationOtp);
 router.post("/register/resend-otp", resendOtp);
 router.post("/register", registerUser);
 router.post("/login", login);
-router.post("/forget-password", forgetPassword);  // ✅ This is the correct route
+router.post("/forget-password", forgetPassword);
 router.put("/reset-password/:token", resetPassword);
 
-// Protected routes
+// Protected routes (require authentication)
+router.post("/logout", isAuthenticated, logout); // Changed from GET to POST for security
+// OR keep GET if preferred
 router.get("/logout", isAuthenticated, logout);
 router.get("/me", isAuthenticated, getUser);
 router.put("/profile", isAuthenticated, updateProfile);
