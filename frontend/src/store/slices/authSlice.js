@@ -104,20 +104,27 @@ export const getUser = createAsyncThunk("auth/me", async (_, thunkAPI) => {
 // In your authSlice.js
 export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
-    // Use POST for logout (more secure)
     const res = await axiosInstance.post("/auth/logout");
-    // OR if using GET: const res = await axiosInstance.get("/auth/logout");
-    
-    // Clear local storage
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
+    // Clear all storage
+    localStorage.clear();
     sessionStorage.clear();
-    
-    toast.success(res.data.message || "Logged out successfully");
-    return null;
+    // Clear cookies (backend will handle this too)
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    return res.data;
   } catch (error) {
-    const message = error.response?.data?.message || "Failed to logout";
-    toast.error(message);
+    // Even if API fails, clear local data
+    localStorage.clear();
+    sessionStorage.clear();
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    const message = error.response?.data?.message || "Logged out successfully";
     return thunkAPI.rejectWithValue(message);
   }
 });
