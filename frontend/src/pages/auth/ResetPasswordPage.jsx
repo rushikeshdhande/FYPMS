@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { KeyRound, Loader, Eye, EyeOff } from "lucide-react";
 import { resetPassword } from "../../store/slices/authSlice";
@@ -11,25 +11,19 @@ const ResetPasswordPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
-  const [token, setToken] = useState("");
-  
+ 
+  const { token } = useParams();
+
   const { isUpdatingPassword } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
 
-  useEffect(() => {
-    // Extract token from URL query parameters
-    const queryParams = new URLSearchParams(location.search);
-    const tokenFromUrl = queryParams.get("token");
-    
-    if (tokenFromUrl) {
-      setToken(tokenFromUrl);
-    } else {
+  useEffect(() => { 
+    if (!token) {
       toast.error("Invalid reset link. Please request a new one.");
       navigate("/forgot-password");
     }
-  }, [location, navigate]);
+  }, [token, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
