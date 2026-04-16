@@ -12,33 +12,29 @@ config();
 
 const app = express();
 
-// ✅ Updated CORS configuration - FIXED SYNTAX
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "http://localhost:5173",
+  "http://localhost:5173",
   "http://127.0.0.1:5173",
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
+  process.env.FRONTEND_URL, // production
 ];
 
-// CORS Middleware - MUST be before other middleware
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Allow requests with no origin (like mobile apps or curl)
+      // allow requests without origin (postman, mobile apps)
       if (!origin) return callback(null, true);
-      if (allowedOrigins.indexOf(origin) === -1) {
-        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-        return callback(new Error(msg), false);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      } else {
+        console.log("❌ Blocked by CORS:", origin);
+        return callback(new Error("Not allowed by CORS"));
       }
-      return callback(null, true);
     },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    credentials: true, // ✅ CRITICAL: Allow credentials
-    allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-    exposedHeaders: ['Set-Cookie'],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE"],
   })
 );
-
 // Other middleware
 app.use(cookieParser());
 app.use(express.json());

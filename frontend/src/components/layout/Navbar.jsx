@@ -1,52 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
+
 import { logout } from "../../store/slices/authSlice";
-import toast from "react-hot-toast";
 
 const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const { authUser } = useSelector((state) => state.auth);
 
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleLogout = async () => {
-    if (isLoggingOut) return; // Prevent multiple clicks
-    
-    setIsLoggingOut(true);
-    try {
-      const result = await dispatch(logout()).unwrap();
-      
-      // Clear all local storage data
-      localStorage.clear();
-      sessionStorage.clear();
-      
-      // Show success message
-      toast.success("Logged out successfully");
-      
-      // Navigate to login page
-      navigate("/login", { replace: true });
-      
-      // Optional: Force reload to clear all state
-      setTimeout(() => {
-        window.location.href = "/login";
-      }, 100);
-      
-    } catch (error) {
-      console.error("Logout error:", error);
-      toast.error(error || "Failed to logout. Please try again.");
-      
-      // Even if error, try to clear and redirect
-      localStorage.clear();
-      sessionStorage.clear();
-      navigate("/login", { replace: true });
-    } finally {
-      setIsLoggingOut(false);
-      setProfileDropdownOpen(false);
-    }
+  const handleLogout = () => {
+    dispatch(logout()).then(() => {
+      navigate("/login");
+    });
   };
 
   const getInitials = (name) => {
@@ -172,16 +141,17 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
                         {authUser?.role}
                       </p>
                     </div>
-                    <button 
-                      className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mt-2 disabled:opacity-50 disabled:cursor-not-allowed"  
-                      onClick={handleLogout}
-                      disabled={isLoggingOut}
-                    >
-                      {isLoggingOut ? "Logging out..." : "Sign out"}
+                    <button className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mt-2"  
+                    onClick={handleLogout}>
+                      Sign out
                     </button>
                   </div>
                 </div>
               )}
+
+
+
+              
             </div>
           </div>
         </div>

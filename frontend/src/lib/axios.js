@@ -1,43 +1,74 @@
 // lib/axios.js
 import axios from "axios";
 
-// Create axios instance with correct configuration
+// ✅ Detect environment
+const isProduction = import.meta.env.PROD;
+
+// ✅ Base URL handling
+const BASE_URL = isProduction
+  ? "https://fypms-m9rx.onrender.com/api/v1"
+  : "http://localhost:4000/api/v1";
+
+// ✅ Create axios instance
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "https://fypms-m9rx.onrender.com/api/v1",
-  withCredentials: true, // ✅ CRITICAL: This sends cookies with every request
+  baseURL: import.meta.env.VITE_API_URL || BASE_URL,
+  withCredentials: true, // required for cookies (auth)
   headers: {
     "Content-Type": "application/json",
   },
+  timeout: 10000, // prevent hanging requests
 });
 
-// Add request interceptor for debugging
+// ✅ Request interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
-    console.log("Making request to:", config.url);
-    console.log("Request data:", config.data);
-    console.log("With credentials:", config.withCredentials);
+    // Optional: attach token if using JWT (future use)
+    // const token = localStorage.getItem("token");
+    // if (token) config.headers.Authorization = `Bearer ${token}`;
+
+    if (!isProduction) {
+      console.log("🚀 Request:", {
+        url: config.url,
+        method: config.method,
+        data: config.data,
+      });
+    }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Add response interceptor for debugging
+// ✅ Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => {
-    console.log("Response from:", response.config.url);
-    console.log("Response data:", response.data);
+    if (!isProduction) {
+      console.log("✅ Response:", response.data);
+    }
     return response;
   },
   (error) => {
-    console.error("API Error Details:", {
-      url: error.config?.url,
-      method: error.config?.method,
-      data: error.config?.data,
-      status: error.response?.status,
-      message: error.response?.data?.message,
-    });
+    // Handle global errors
+    if (error.response) {
+      const status = error.response.status;
+
+      if (status === 401) {
+        console.warn("🔒 Unauthorized - Redirect to login");
+        // Example:
+        // window.location.href = "/login";
+      }
+
+      if (!isProduction) {
+        console.error("❌ API Error:", {
+          url: error.config?.url,
+          status,
+          message: error.response?.data?.message,
+        });
+      }
+    } else {
+      console.error("❌ Network Error:", error.message);
+    }
+
     return Promise.reject(error);
   }
 );
