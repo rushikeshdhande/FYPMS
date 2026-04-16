@@ -1,19 +1,18 @@
-// utils/generateToken.js
+ 
 import jwt from "jsonwebtoken";
 
 export const generateToken = (user, statusCode, message, res) => {
   const token = jwt.sign(
     { 
       id: user._id, 
-      role: user.role  // Include role in token payload
+      role: user.role  
     }, 
     process.env.JWT_SECRET, 
     {
       expiresIn: process.env.JWT_EXPIRE || "7d",
     }
   );
-
-  // Remove password from output
+ 
   user.password = undefined;
 
   const cookieOptions = {
@@ -30,6 +29,6 @@ export const generateToken = (user, statusCode, message, res) => {
     message,
     user,
     token,
-    role: user.role, // Include role in response
+    role: user.role,  
   });
 };

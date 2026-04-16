@@ -233,35 +233,25 @@ export const login = asyncHandler(async (req, res, next) => {
   generateToken(user, 200, "Logged in successfully", res);
 });
 
-// ---------- Logout ----------
 export const logout = asyncHandler(async (req, res, next) => {
-  // Clear the cookie
+  const isProduction = process.env.NODE_ENV === "production";
+
   res.clearCookie("token", {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
+    secure: isProduction,
+    sameSite: isProduction ? "None" : "Lax",
     path: "/",
-    expires: new Date(0) // Force expiration
   });
-  
-  // Optional: Add token to blacklist if you want to invalidate it immediately
-  // This prevents using the same token again
-  const token = req.cookies.token;
-  if (token) {
-    try {
-      // You can store invalidated tokens in Redis or database
-      // For now, we'll just clear the cookie
-      console.log("User logged out successfully");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  }
-  
+
+  console.log("User logged out successfully");
+
   res.status(200).json({
     success: true,
-    message: "Logged out successfully"
+    message: "Logged out successfully",
   });
 });
+
+
 // ---------- Get current user ----------
 export const getUser = asyncHandler(async (req, res, next) => {
   const user = req.user;
